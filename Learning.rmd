@@ -1,0 +1,680 @@
+---
+title: "Learning"
+author: "Guoshun Su"
+date: "2024/6/3"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+```
+
+```{r not boring movies}
+## Write a solution to report the movies with an odd-numbered ID and a description that is not "boring".
+## Return the result table ordered by rating in descending order.
+
+id = c(1, 2, 3, 4, 5)
+movie = c('War', 'Science', 'irish', 'Ice song', 'House card')
+description = c('great 3D', 'fiction', 'boring', 'Fantacy', 'Interesting')
+rating = c(8.9, 8.5, 6.2, 8.6, 9.1)
+cinema = data.frame(id, movie, description, rating)
+
+result = cinema %>%
+  filter(description != 'boring',
+         id %% 2 == 1) %>%
+  arrange(desc(rating))
+result
+```
+
+
+```{r Average Time of Process per Machine}
+# There is a factory website that has several machines each running the same number of processes. Write a solution to find the average time each machine takes to complete a process.
+
+# The time to complete a process is the 'end' timestamp minus the 'start' timestamp. The average time is calculated by the total time to complete every process on the machine divided by the number of processes that were run.
+
+# The resulting table should have the machine_id along with the average time as processing_time, which should be rounded to 3 decimal places.
+
+machine_id = c(0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2)
+process_id = c(0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1)
+activity_type = c('start', 'end', 'start', 'end', 'start', 'end', 'start', 'end', 'start', 'end', 'start', 'end')
+timestamp = c(0.712, 1.52, 3.14, 4.12, 0.55, 1.55, 0.43, 1.42, 4.1, 4.512, 2.5, 5.0)
+activity = data.frame(machine_id, process_id, activity_type, timestamp)
+activity
+
+result = activity %>%
+  inner_join(activity, by=join_by(machine_id, process_id), suffix = c(".x", ".y")) %>%
+  filter(activity_type.x == 'start',
+         activity_type.y == 'end') %>%
+  mutate(processing_time = timestamp.y - timestamp.x) %>%
+  group_by(machine_id) %>%
+  summarise(processing_time = mean(processing_time)) %>%
+  round(3)
+
+result
+
+```
+
+
+```{r Average Selling Price}
+
+# Write a solution to find the average selling price for each product. average_price should be rounded to 2 decimal places.
+# 
+# Return the result table in any order.
+
+product_id = c(1, 1, 2, 2, 3)
+start_date = c(as_datetime('2019-02-17 00:00:00'), as_datetime('2019-03-01 00:00:00'), as_datetime('2019-02-01 00:00:00'), as_datetime('2019-02-21 00:00:00'), as_datetime('2019-02-21 00:00:00'))
+end_date = c(as_datetime('2019-02-28 00:00:00'), as_datetime('2019-03-22 00:00:00'), as_datetime('2019-02-20 00:00:00'), as_datetime('2019-03-31 00:00:00'), as_datetime('2019-03-31 00:00:00'))
+price = c(5, 20, 15, 30, 30)
+prices = data.frame(product_id, start_date, end_date, price)
+
+product_id = c(1, 1, 2, 2)
+purchase_date = c(as_datetime('2019-02-25 00:00:00'), as_datetime('2019-03-01 00:00:00'), as_datetime('2019-02-10 00:00:00'), as_datetime('2019-03-22 00:00:00'))
+units = c(100, 15, 200, 30)
+units_sold = data.frame(product_id, purchase_date, units)
+
+result = prices %>%
+  left_join(units_sold, by = 'product_id') %>%
+  filter(is.na(purchase_date) | (purchase_date >= start_date & purchase_date <= end_date)) %>%
+  group_by(product_id) %>%
+  summarise(average_price = round((sum(price * units)/sum(units)), 2))
+
+result[is.na(result)] = 0
+result
+```
+
+
+```{r Project Employees I}
+
+# Write an SQL query that reports the average experience years of all the employees for each project, rounded to 2 digits.
+# 
+# Return the result table in any order.
+
+project_id = c(1, 1, 1, 2, 2)
+employee_id = c(1, 2, 3, 1, 4)
+project = data.frame(project_id, employee_id)
+project
+
+
+employee_id = c(1, 2, 3, 4)
+name = c('Khaled', 'Ali', 'John', 'Doe')
+experience_years = c(3, 2, 1, 2)
+employee = data.frame(employee_id, name, experience_years)
+employee
+
+result = project %>%
+  left_join(employee, by='employee_id') %>%
+  group_by(project_id) %>%
+  summarise(experience_years1 = round(mean(experience_years), 2)) %>%
+  print()
+
+```
+
+
+```{r Percentage of Users Attended a Contest}
+
+# Write a solution to find the percentage of the users registered in each contest rounded to two decimals.
+# 
+# Return the result table ordered by percentage in descending order. In case of a tie, order it by contest_id in ascending order.
+
+user_id = c(6, 2, 7)
+user_name = c('Alice', 'Bob', 'Alex')
+users = data.frame(user_id, user_name)
+users
+
+contest_id = c(215, 209, 208, 210, 208, 209, 209, 215, 208, 210, 207, 210)
+user_id = c(6, 2, 2, 6, 6, 7, 6, 7, 7, 2, 2, 7)
+register = data.frame(contest_id, user_id)
+register
+
+result = register %>%
+  group_by(contest_id) %>%
+  summarise(percentage = round(n()/dim(users)[1]*100, 2)) %>%
+  arrange(desc(percentage), contest_id) %>%
+  print()
+```
+
+
+```{r Queries Quality and Percentage}
+
+# We define query quality as:
+# 
+# The average of the ratio between query rating and its position.
+# 
+# We also define poor query percentage as:
+# 
+# The percentage of all queries with rating less than 3.
+# 
+# Write a solution to find each query_name, the quality and poor_query_percentage.
+# 
+# Both quality and poor_query_percentage should be rounded to 2 decimal places.
+# 
+# Return the result table in any order.
+
+query_name = c('Dog', 'Dog', 'Dog', 'Cat', 'Cat', 'Cat')
+result = c('Golden Retriever', 'German Shepherd', 'Mule', 'Shirazi', 'Siamese', 'Sphynx')
+position = c(1, 2, 200, 5, 3, 7)
+rating = c(5, 5, 1, 2, 3, 4)
+queries = data.frame(query_name, result, position, rating)
+queries
+
+result = queries %>%
+  drop_na(query_name) %>%
+  mutate(temp = if_else(rating < 3, 100, 0)) %>%
+  group_by(query_name) %>%
+  summarise(quality = round(mean(rating/position), 2),
+            poor_query_percentage = round(mean(temp)), 2) %>%
+  select(1:3) %>%
+  print()
+  
+```
+
+
+
+```{r Monthly Transactions I}
+
+# Write an SQL query to find for each month and country, the number of transactions and their total amount, the number of approved transactions and their total amount.
+
+id = c(121, 122, 123, 124)
+country = c('US', 'US', NA, 'DE')
+state = c('approved', 'declined', 'approved', 'approved')
+amount = c(1000, 2000, 2000, 2000)
+trans_date = c(as_datetime('2018-12-18 00:00:00'), as_datetime('2018-12-19 00:00:00'), as_datetime('2019-01-01 00:00:00'), as_datetime('2019-01-07 00:00:00'))
+transactions = data.frame(id, country, state, amount, trans_date)
+transactions
+
+result = transactions %>%
+  mutate(state_bool = if_else(state=='approved', 1, 0),
+         amount_bool = if_else(state=='approved', amount, 0)) %>%
+  mutate(trans_date = substring(trans_date, 1, 7)) %>%
+  rename('month'=5) %>%
+  group_by(country, month) %>%
+  summarise(trans_count= n(),
+            approved_count=sum(state_bool),
+            trans_total_amount=sum(amount),
+            approved_total_amount=sum(amount_bool)) %>%
+  print()
+```
+
+
+```{r Immediate Food Delivery II}
+# The first order of a customer is the order with the earliest order date that the customer made. It is guaranteed that a customer has precisely one first order.
+
+# Write a solution to find the percentage of immediate orders in the first orders of all customers, rounded to 2 decimal places.
+
+delivery_id = c(1, 2, 3, 4, 5, 6, 7)
+customer_id = c(1, 2, 1, 3, 3, 2, 4)
+order_date = c(as_datetime('2019-08-01 00:00:00'), as_datetime('2019-08-02 00:00:00'), as_datetime('2019-08-11 00:00:00'), as_datetime('2019-08-24 00:00:00'), as_datetime('2019-08-21 00:00:00'), as_datetime('2019-08-11 00:00:00'), as_datetime('2019-08-09 00:00:00'))
+customer_pref_delivery_date = c(as_datetime('2019-08-02 00:00:00'), as_datetime('2019-08-02 00:00:00'), as_datetime('2019-08-12 00:00:00'), as_datetime('2019-08-24 00:00:00'), as_datetime('2019-08-22 00:00:00'), as_datetime('2019-08-13 00:00:00'), as_datetime('2019-08-09 00:00:00'))
+delivery = data.frame(delivery_id, customer_id, order_date, customer_pref_delivery_date)
+delivery
+
+result = delivery %>%
+  group_by(customer_id) %>%
+  summarise(min_date = min(order_date)) %>%
+  left_join(delivery, by = c('customer_id' = 'customer_id', 'min_date' = 'order_date')) %>%
+  mutate(immediate_percentage = if_else(min_date == customer_pref_delivery_date, 100, 0)) %>%
+  group_by() %>%
+  summarise(immediate_percentage = round(mean(immediate_percentage), 2)) %>%
+  print()
+```
+
+
+```{r Game Play Analysis IV}
+
+# Write a solution to report the fraction of players that logged in again on the day after the day they first logged in, rounded to 2 decimal places. In other words, you need to count the number of players that logged in for at least two consecutive days starting from their first login date, then divide that number by the total number of players.
+
+player_id = c(1, 1, 2, 3, 3)
+device_id = c(NA, NA, NA, NA, NA)
+event_date = c(as_datetime('2016-03-01 00:00:00'), as_datetime('2016-03-02 00:00:00'), as_datetime('2017-06-25 00:00:00'), as_datetime('2016-03-02 00:00:00'), as_datetime('2018-07-03 00:00:00'))
+games_played = c(NA, NA, NA, NA, NA)
+activity = data.frame(player_id, device_id, event_date, games_played)
+activity
+
+min_df = activity %>%
+  group_by(player_id) %>%
+  summarise(event_date = min(event_date)) %>%
+  mutate(event_date = ymd(event_date) + days(1))
+
+result = min_df %>%
+  left_join(activity, by=c('player_id', 'event_date'), keep=T) %>%
+  select(event_date.y) %>%
+  rename(fraction = event_date.y) %>%
+  mutate(fraction = if_else(is.na(fraction), 0, 1)) %>%
+  group_by() %>%
+  summarise(fraction = mean(fraction)) %>%
+  round(2) %>%
+  print()
+
+```
+
+
+```{r User Activity for the Past 30 Days I}
+
+# Write a solution to find the daily active user count for a period of 30 days ending 2019-07-27 inclusively. A user was active on someday if they made at least one activity on that day.
+
+user_id = c(1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4)
+session_id = c(1, 1, 1, 4, 4, 4, 2, 2, 2, 3, 3)
+activity_date = c(as_datetime('2019-07-20 00:00:00'), as_datetime('2019-07-20 00:00:00'), as_datetime('2019-07-20 00:00:00'), as_datetime('2019-07-20 00:00:00'), as_datetime('2019-07-21 00:00:00'), as_datetime('2019-07-21 00:00:00'), as_datetime('2019-07-21 00:00:00'), as_datetime('2019-07-21 00:00:00'), as_datetime('2019-07-21 00:00:00'), as_datetime('2019-06-25 00:00:00'), as_datetime('2019-06-25 00:00:00'))
+activity_type = c('open_session', 'scroll_down', 'end_session', 'open_session', 'send_message', 'end_session', 'open_session', 'send_message', 'end_session', 'open_session', 'end_session')
+activity = data.frame(user_id, session_id, activity_date, activity_type)
+activity
+
+result = activity %>%
+  filter(!is.na(activity_type),
+         activity_date <= ymd('2019-07-27'),
+         activity_date > (ymd('2019-07-27') - days(30))) %>%
+  select(-c(activity_type, session_id)) %>%
+  distinct() %>%
+  group_by(activity_date) %>%
+  summarise(active_users=n()) %>%
+  rename(day=activity_date) %>%
+  print()
+```
+
+```{r Product Sales Analysis III}
+
+# Write a solution to select the product id, year, quantity, and price for the first year of every product sold.
+sale_id = c(1, 2, 7, 3)
+product_id = c(100, 100, 200, 100)
+year = c(2008, 2009, 2011, 2008)
+quantity = c(10, 12, 15, 20)
+price = c(5000, 5000, 9000, 10)
+sales = data.frame(sale_id, product_id, year, quantity, price)
+sales
+
+product_id = c(100, 200, 300)
+product_name = c('Nokia', 'Apple', 'Samsung')
+product = data.frame(product_id, product_name)
+product
+
+res = sales %>%
+  group_by(product_id) %>%
+  summarise(year = min(year)) %>%
+  select(product_id, year) %>%
+  left_join(sales, by=c('product_id', 'year')) %>%
+  rename(first_year = year) %>%
+  select(-c(sale_id)) %>%
+  print()
+
+```
+
+
+```{r Find Followers Count}
+
+# Write a solution that will, for each user, return the number of followers.
+# Return the result table ordered by user_id in ascending order.
+
+user_id = c(0, 1, 2, 2)
+follower_id = c(1, 0, 0, 1)
+followers = data.frame(user_id, follower_id)
+followers
+
+res = followers %>%
+  group_by(user_id) %>%
+  summarise(followers_count = n()) %>%
+  arrange(user_id) %>%
+  print()
+```
+
+
+```{r Biggest Single Number}
+
+# A single number is a number that appeared only once in the MyNumbers table.
+# Find the largest single number. If there is no single number, report null.
+
+num = c(8, 8, 3, 3, 1, 4, 1, 4)
+my_numbers = data.frame(num)
+my_numbers
+
+res = my_numbers %>%
+  group_by(num) %>%
+  summarise(n = n()) %>%
+  filter(n == 1) %>%
+  arrange(desc(num)) %>%
+  slice(1) %>%
+  select(num)
+
+if(nrow(res) > 0){
+  print(res)
+}else{
+  res[1, ] = c(NA)
+  print(res)
+}
+```
+
+```{r Customers Who Bought All Products}
+
+# Write a solution to report the customer ids from the Customer table that bought all the products in the Product table.
+
+customer_id = c(1, 2, 3, 3, 1)
+product_key = c(5, 6, 5, 6, 6)
+customer = data.frame(customer_id, product_key)
+customer
+
+product_key = c(5, 6)
+product = data.frame(product_key)
+product
+
+res = customer %>%
+  distinct() %>%
+  group_by(customer_id) %>%
+  summarise(product_key=n()) %>%
+  filter(product_key == nrow(product)) %>%
+  select(customer_id) %>%
+  print()
+```
+
+
+
+```{r The Number of Employees Which Report to Each Employee}
+
+# Write a solution to report the ids and the names of all managers, the number of employees who report directly to them, and the average age of the reports rounded to the nearest integer.
+
+employee_id = c(9, 6, 4, 2)
+name = c('Hercy', 'Alice', 'Bob', 'Winston')
+reports_to = c(NA, 9, 9, NA)
+age = c(43, 41, 36, 37)
+employees = data.frame(employee_id, name, reports_to, age)
+employees
+
+
+res = employees %>%
+  inner_join(employees, by=c('employee_id'='reports_to')) %>%
+  group_by(employee_id, name.x) %>%
+  summarise(reports_count = n(),
+            average_age = round(mean(age.y)+1e-10, 0)) %>%
+  select(c(employee_id, name.x, reports_count, average_age)) %>%
+  arrange(employee_id) %>%
+  rename(name = name.x) %>%
+  print()
+```
+
+
+```{r Primary Department for Each Employee}
+
+# Write a solution to report all the employees with their primary department. For employees who belong to one department, report their only department.
+
+employee_id = c(1, 2, 2, 3, 4, 4, 4)
+department_id = c(1, 1, 2, 3, 2, 3, 4)
+primary_flag = c('N', 'Y', 'N', 'N', 'N', 'Y', 'N')
+employee = data.frame(employee_id, department_id, primary_flag)
+employee
+
+single_emp = employee %>%
+  group_by(employee_id) %>%
+  summarise(n = n()) %>%
+  filter(n == 1) %>%
+  select(c(1))
+
+res = employee %>%
+  filter(primary_flag == 'Y' | employee_id %in% single_emp$employee_id) %>%
+  select(c(1:2)) %>%
+  print()
+```
+
+
+```{r Triangle Judgement}
+# Report for every three line segments whether they can form a triangle.
+
+x = c(13, 10)
+y = c(15, 20)
+z = c(30, 15)
+triangle = data.frame(x, y, z)
+triangle
+
+res = triangle %>%
+  mutate(triangle=if_else((x+y>z & x+z>y & z+y>x), 'Yes', 'No')) %>%
+  print()
+
+```
+
+
+```{r Consecutive Numbers}
+# Find all numbers that appear at least three times consecutively.
+
+id = c(4,5,6,1,3,7,2)
+num = c(2,1,2,1,1,2,1)
+logs = data.frame(id, num)
+logs
+
+res = logs %>%
+  cross_join(logs) %>%
+  cross_join(logs)
+
+if(dim(res)[1]==0){
+  print(data.frame(ConsecutiveNums=c()))
+}else{
+  res %>%
+  filter(id.x == id.y-1 & id.y == id-1 & num.x==num.y & num.x == num) %>%
+  select(num) %>%
+  distinct() %>%
+  rename(ConsecutiveNums=num) %>%
+  print()
+}
+
+```
+
+
+```{r Product Price at a Given Date}
+# Write a solution to find the prices of all products on 2019-08-16. Assume the price of all products before any change is 10.
+
+product_id = c(1, 2, 1, 1, 2, 3)
+new_price = c(20, 50, 30, 5, 65, 20)
+change_date = c(as_datetime('2019-08-14 00:00:00'), as_datetime('2019-08-14 00:00:00'), as_datetime('2019-08-15 00:00:00'), as_datetime('2019-08-16 00:00:00'), as_datetime('2019-08-17 00:00:00'), as_datetime('2019-08-18 00:00:00'))
+products = data.frame(product_id, new_price, change_date)
+products
+
+products %>%
+  select(product_id) %>%
+  distinct() %>%
+  left_join(
+    products %>%
+      filter(change_date <= ymd('2019-08-16')) %>%
+      arrange(desc(change_date)) %>%
+      distinct(product_id, .keep_all = T),
+    by=c('product_id')) %>%
+  replace_na(list(new_price = 10)) %>%
+  rename(price = new_price) %>%
+  select(1:2) %>%
+  print()
+```
+
+```{r Last Person to Fit in the Bus}
+# Write a solution to find the person_name of the last person that can fit on the bus without exceeding the weight limit.
+
+person_id = c(5, 4, 3, 6, 1, 2)
+person_name = c('Alice', 'Bob', 'Alex', 'John Cena', 'Winston', 'Marie')
+weight = c(250, 175, 350, 400, 500, 200)
+turn = c(1, 5, 2, 3, 6, 4)
+queue = data.frame(person_id, person_name, weight, turn)
+queue
+
+queue %>%
+  arrange(turn) %>%
+  mutate(running_total=cumsum(.$weight)) %>%
+  filter(running_total <= 1000) %>%
+  tail(1) %>%
+  select(person_name) %>%
+  print()
+```
+
+
+```{r Employees Whose Manager Left the Company}
+# Find the IDs of the employees whose salary is strictly less than $30000 and whose manager left the company. When a manager leaves the company, their information is deleted from the Employees table, but the reports still have their manager_id set to the manager that left.
+
+employee_id = c(3, 12, 13, 1, 9, 11)
+name = c('Mila', 'Antonella', 'Emery', 'Kalel', 'Mikaela', 'Joziah')
+manager_id = c(9, NA, NA, 11, NA, 6)
+salary = c(60301, 31000, 67084, 21241, 50937, 28485)
+employees = data.frame(employee_id, name, manager_id, salary)
+employees
+
+employees %>%
+  filter(!is.na(manager_id) & salary < 30000 & !manager_id %in% employee_id) %>%
+  arrange(employee_id) %>%
+  print()
+```
+
+
+```{r Exchange Seats}
+# Write a solution to swap the seat id of every two consecutive students. If the number of students is odd, the id of the last student is not swapped.
+
+id = c(1, 2, 3, 4, 5)
+student = c('Abbot', 'Doris', 'Emerson', 'Green', 'Jeames')
+seat = data.frame(id, student)
+seat
+
+seat %>%
+  mutate(id1 = id) %>%
+  mutate(id = if_else(id1 %% 2 == 1, id1+1, id1-1)) %>%
+  mutate(id = if_else(id1 == nrow(.) & id1 %% 2 == 1, id1, id)) %>%
+  arrange(id) %>%
+  select(1:2) %>%
+  print()
+```
+
+
+```{r Movie Rating}
+# Find the name of the user who has rated the greatest number of movies. In case of a tie, return the lexicographically smaller user name.
+
+# Find the movie name with the highest average rating in February 2020. In case of a tie, return the lexicographically smaller movie name.
+movie_id = c(1, 2, 3)
+title = c('Avengers', 'Frozen 2', 'Joker')
+movies = data.frame(movie_id, title)
+movies
+
+user_id = c(1, 2, 3, 4)
+name = c('Daniel', 'Monica', 'Maria', 'James')
+users = data.frame(user_id, name)
+users
+
+movie_id = c(1, 1, 1, 1, 2, 2, 2, 3, 3)
+user_id = c(1, 2, 3, 4, 1, 2, 3, 1, 2)
+rating = c(3, 4, 2, 1, 5, 2, 2, 3, 4)
+created_at = c(as_datetime('2020-01-12 00:00:00'), as_datetime('2020-02-11 00:00:00'), as_datetime('2020-02-12 00:00:00'), as_datetime('2020-01-01 00:00:00'), as_datetime('2020-02-17 00:00:00'), as_datetime('2020-02-01 00:00:00'), as_datetime('2020-03-01 00:00:00'), as_datetime('2020-02-22 00:00:00'), as_datetime('2020-02-25 00:00:00'))
+movie_rating = data.frame(movie_id, user_id, rating, created_at)
+movie_rating
+
+movie_rating %>%
+  inner_join(users, by = 'user_id') %>%
+  group_by(user_id) %>%
+  summarise(name = first(name), rating_num = n()) %>%
+  arrange(desc(rating_num), name) %>%
+  slice(1) %>%
+  select(name) %>%
+  rename(results = name) %>%
+  bind_rows(
+    movie_rating %>%
+      inner_join(movies, by = 'movie_id') %>%
+      filter(paste0(year(created_at), month(created_at)) == '20202') %>%
+      group_by(movie_id) %>%
+      summarise(title = first(title), rating = mean(rating)) %>%
+      arrange(desc(rating), title) %>%
+      slice(1) %>%
+      select(title) %>%
+      rename(results = title)
+  )
+```
+
+
+
+```{r Restaurant Growth}
+# Compute the moving average of how much the customer paid in a seven days window (i.e., current day + 6 days before). average_amount should be rounded to two decimal places.
+
+customer_id = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 3)
+name = c('Jhon', 'Daniel', 'Jade', 'Khaled', 'Winston', 'Elvis', 'Anna', 'Maria', 'Jaze', 'Jhon', 'Jade')
+visited_on = c(as_datetime('2019-01-01 00:00:00'), as_datetime('2019-01-02 00:00:00'), as_datetime('2019-01-03 00:00:00'), as_datetime('2019-01-04 00:00:00'), as_datetime('2019-01-05 00:00:00'), as_datetime('2019-01-06 00:00:00'), as_datetime('2019-01-07 00:00:00'), as_datetime('2019-01-08 00:00:00'), as_datetime('2019-01-09 00:00:00'), as_datetime('2019-01-10 00:00:00'), as_datetime('2019-01-10 00:00:00'))
+amount = c(100, 110, 120, 130, 110, 140, 150, 80, 110, 130, 150)
+customer = data.frame(customer_id, name, visited_on, amount)
+
+customer %>%
+  mutate(rolling = cumsum(amount)) %>%
+  group_by(visited_on) %>%
+  summarise(rolling = max(rolling)) %>%
+  mutate(new_rolling = if_else(row_number(rolling) - 7 >= 0, rolling-lag(rolling, 7), 0)) %>%
+  mutate(new_rolling = if_else(is.na(new_rolling), rolling, new_rolling)) %>%
+  filter(new_rolling != 0) %>%
+  mutate(average_amount = round(new_rolling/7, 2)) %>%
+  rename(amount = new_rolling) %>%
+  select(c(1, 3:4))
+
+  
+```
+
+
+```{r List the Products Ordered in a Period}
+# Write a solution to get the names of products that have at least 100 units ordered in February 2020 and their amount.
+product_id = c(1, 2, 3, 4, 5)
+product_name = c('Leetcode Solutions', 'Jewels of Stringology', 'HP', 'Lenovo', 'Leetcode Kit')
+product_category = c('Book', 'Book', 'Laptop', 'Laptop', 'T-shirt')
+products = data.frame(product_id, product_name, product_category)
+products
+
+product_id = c(1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5)
+order_date = c(as_datetime('2020-02-05 00:00:00'), as_datetime('2020-02-10 00:00:00'), as_datetime('2020-01-18 00:00:00'), as_datetime('2020-02-11 00:00:00'), as_datetime('2020-02-17 00:00:00'), as_datetime('2020-02-24 00:00:00'), as_datetime('2020-03-01 00:00:00'), as_datetime('2020-03-04 00:00:00'), as_datetime('2020-03-04 00:00:00'), as_datetime('2020-02-25 00:00:00'), as_datetime('2020-02-27 00:00:00'), as_datetime('2020-03-01 00:00:00'))
+unit = c(60, 70, 30, 80, 2, 3, 20, 30, 60, 50, 50, 50)
+orders = data.frame(product_id, order_date, unit)
+orders
+
+orders %>%
+  filter(year(order_date) == 2020 & month(order_date) == 2) %>%
+  group_by(product_id) %>%
+  summarise(unit = sum(unit)) %>%
+  filter(unit >= 100) %>%
+  left_join(products, by=c('product_id')) %>%
+  select(product_name, unit)
+```
+
+
+```{r Market Analysis I}
+# Write a solution to find for each user, the join date and the number of orders they made as a buyer in 2019.
+
+user_id = c(1, 2, 3, 4)
+join_date = c(as_datetime('2018-01-01 00:00:00'), as_datetime('2018-02-09 00:00:00'), as_datetime('2018-01-19 00:00:00'), as_datetime('2018-05-21 00:00:00'))
+favorite_brand = c('Lenovo', 'Samsung', 'LG', 'HP')
+users = data.frame(user_id, join_date, favorite_brand)
+users
+
+order_id = c(1, 2, 3, 4, 5, 6)
+order_date = c(as_datetime('2019-08-01 00:00:00'), as_datetime('2018-08-02 00:00:00'), as_datetime('2019-08-03 00:00:00'), as_datetime('2018-08-04 00:00:00'), as_datetime('2018-08-04 00:00:00'), as_datetime('2019-08-05 00:00:00'))
+item_id = c(4, 2, 3, 1, 1, 2)
+buyer_id = c(1, 1, 2, 4, 3, 2)
+seller_id = c(2, 3, 3, 2, 4, 4)
+orders = data.frame(order_id, order_date, item_id, buyer_id, seller_id)
+orders
+
+item_id = c(1, 2, 3, 4)
+item_brand = c('Samsung', 'Lenovo', 'LG', 'HP')
+items = data.frame(item_id, item_brand)
+items
+
+users %>%
+  left_join(
+    orders %>%
+      filter(year(order_date) == 2019),
+    by=c('user_id' = 'buyer_id')
+  ) %>%
+  group_by(user_id) %>%
+  summarise(join_date = first(join_date),
+            orders_in_2019 = sum(!is.na(order_id))) %>%
+  rename("buyer_id" = user_id)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
